@@ -44,9 +44,19 @@ def array_equal(a: Array, b: Array) -> bool:
 
 def sum_array(arr: Array) -> int:
     """Sum all scalar values in the array."""
-    if isinstance(arr, list):
-        return sum(sum_array(x) for x in arr)
-    return int(arr)
+    if not arr:
+        return 0
+    # Fast path for 3D image arrays used throughout the repo.
+    if isinstance(arr[0], list) and isinstance(arr[0][0], list):
+        total = 0
+        for plane in arr:
+            for row in plane:
+                total += sum(row)
+        return total
+    # Fallback to generic summation for other shapes.
+    if isinstance(arr[0], list):
+        return sum(sum_array(sub) for sub in arr)
+    return sum(arr)
 
 
 def fill_rect(frame: Array, x1: int, y1: int, x2: int, y2: int, color: Tuple[int, int, int]) -> None:
