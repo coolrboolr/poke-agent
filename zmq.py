@@ -3,6 +3,7 @@ import time
 
 PUB = 1
 SUB = 2
+SUBSCRIBE = b""
 POLLIN = 1
 
 _buses = {}
