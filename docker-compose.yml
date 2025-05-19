@@ -4,7 +4,5 @@ services:
     build: .
     volumes:
       - ./:/app
-    environment:
-      - TWITCH_STREAM_KEY=${TWITCH_STREAM_KEY}
-      - ROM_PATH=${ROM_PATH}
-    command: python -m unittest discover -s tests -p 'test_*.py'
+    env_file: .env
+    command: python -m src.main
