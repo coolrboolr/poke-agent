@@ -5,4 +5,6 @@ services:
     volumes:
       - ./:/app
     env_file: .env
+    environment:
+      - PROFILE=dev
     command: python -m src.main

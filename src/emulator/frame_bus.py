@@ -1,5 +1,6 @@
 import zmq
 import numpy as np
+from src.utils.logger import log
 
 
 class FrameBus:
@@ -13,10 +14,13 @@ class FrameBus:
         else:
             self.port = port
             self.socket.bind(f"tcp://*:{port}")
+        log(f"FrameBus bound to port {self.port}", tag="bus")
 
     def publish(self, frame: np.ndarray) -> None:
         self.socket.send_pyobj(frame)
+        log(f"Published frame {frame.shape}", tag="bus")
 
     def close(self) -> None:
         self.socket.close()
         self.context.term()
+        log("FrameBus closed", tag="bus")

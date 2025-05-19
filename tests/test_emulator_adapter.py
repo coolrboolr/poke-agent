@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 import types
+import time
 
 import src.emulator.adapter as adapter_module
 from src.emulator.adapter import EmulatorAdapter
@@ -52,3 +53,22 @@ def test_send_input_logs(monkeypatch):
     emu = EmulatorAdapter(rom_path="test.gba")
     emu.send_input("A")
     assert pressed == ["A"]
+
+
+def test_input_debounce(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        adapter_module,
+        "subprocess",
+        types.SimpleNamespace(
+            Popen=DummyPopen, run=lambda args, check=False: calls.append(time.monotonic())
+        ),
+    )
+    monkeypatch.setattr(
+        adapter_module.ImageGrab, "grab", lambda: Image.new("RGB", (1, 1))
+    )
+
+    emu = EmulatorAdapter(rom_path="test.gba", debounce_interval_ms=80)
+    emu.send_input("A")
+    emu.send_input("A")
+    assert len(calls) == 1
