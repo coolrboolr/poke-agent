@@ -15,7 +15,7 @@ def main() -> None:
             bus.publish(frame)
             time.sleep(0.1)
     except KeyboardInterrupt:
-        pass
+        log("Stream interrupted", tag="emulator")
     finally:
         bus.close()
         adapter.close()
