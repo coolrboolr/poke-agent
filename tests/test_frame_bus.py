@@ -1,4 +1,4 @@
-import numpy as np
+from src.array_utils import zeros, array_equal
 import zmq
 
 from src.emulator.frame_bus import FrameBus
@@ -11,7 +11,7 @@ def test_pub_sub_frame():
     sub.connect(f"tcp://127.0.0.1:{bus.port}")
     sub.setsockopt(zmq.SUBSCRIBE, b"")
 
-    frame = np.zeros((2, 2, 3), dtype=np.uint8)
+    frame = zeros((2, 2, 3))
     bus.publish(frame)
 
     poller = zmq.Poller()
@@ -19,8 +19,9 @@ def test_pub_sub_frame():
     socks = dict(poller.poll(1000))
     assert sub in socks
     received = sub.recv_pyobj()
-    assert np.array_equal(received, frame)
+    assert array_equal(received, frame)
 
     sub.close()
     bus.close()
     ctx.term()
+

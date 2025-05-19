@@ -1,5 +1,3 @@
-import numpy as np
-from PIL import Image
 import pytesseract
 
 from src.utils.logger import log
@@ -13,28 +11,29 @@ class HUDParser:
     PLAYER_HP_BAR = (10, 120, 70, 124)
     ENEMY_HP_BAR = (90, 20, 150, 24)
 
-    def _extract_text(self, frame: np.ndarray) -> str:
+    def _extract_text(self, frame) -> str:
         x1, y1, x2, y2 = self.TEXTBOX_REGION
-        crop = frame[y1:y2, x1:x2]
-        pil_img = Image.fromarray(crop)
-        text = pytesseract.image_to_string(pil_img)
+        crop = [row[x1:x2] for row in frame[y1:y2]]
+        text = pytesseract.image_to_string(crop)
         cleaned = text.replace("\n", " ").strip()
         cleaned = cleaned.replace("0HP", "OHP")  # example typo fix
         return cleaned
 
-    def _hp_from_region(self, frame: np.ndarray, box) -> float:
+    def _hp_from_region(self, frame, box) -> float:
         x1, y1, x2, y2 = box
-        region = frame[y1:y2, x1:x2]
-        green = (
-            (region[:, :, 1] > 150)
-            & (region[:, :, 0] < 120)
-            & (region[:, :, 2] < 120)
-        )
-        cols = green.any(axis=0)
-        ratio = cols.mean() if cols.size else 0.0
-        return float(ratio)
+        width = x2 - x1
+        if width <= 0:
+            return 0.0
+        filled = 0
+        for x in range(x1, x2):
+            for y in range(y1, y2):
+                r, g, b = frame[y][x]
+                if g > 150 and r < 120 and b < 120:
+                    filled += 1
+                    break
+        return filled / width
 
-    def parse(self, frame: np.ndarray) -> dict:
+    def parse(self, frame) -> dict:
         dialogue = self._extract_text(frame)
         player_hp = self._hp_from_region(frame, self.PLAYER_HP_BAR)
         enemy_hp = self._hp_from_region(frame, self.ENEMY_HP_BAR)

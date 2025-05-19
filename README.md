@@ -52,6 +52,23 @@ docker compose up
 
 The development container exposes a Python environment with required dependencies. ROM paths and Twitch credentials are supplied via environment variables loaded from `.env` or directly through Docker Compose secrets.
 
+## Running Tests
+
+Build the container image and open a shell inside it:
+
+```bash
+docker compose build
+docker compose run --rm app bash
+```
+
+Inside the container run:
+
+```bash
+python pytest.py -v
+```
+
+This ensures all dependencies are available when executing the test suite.
+
 ## Twitch Streaming Setup
 
 Game output is streamed using `ffmpeg` or OBS inside the container. Configure your Twitch stream key in the environment variables:

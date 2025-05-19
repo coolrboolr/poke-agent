@@ -26,7 +26,8 @@ def run_loop(duration_s: int = 30) -> None:
         frame = adapter.read_frame()
         t1 = time.time()
         if first_shape is None:
-            first_shape = frame.shape
+            from src.array_utils import shape
+            first_shape = shape(frame)
             if first_shape != (160, 144, 3):
                 log(f"Unexpected frame shape {first_shape}", level="WARN", tag="main")
         bus.publish(frame)

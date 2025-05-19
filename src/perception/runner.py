@@ -1,5 +1,4 @@
 from typing import Dict, Any
-import numpy as np
 
 from src.utils.event_log import log_game_state
 from src.perception.screen_diff import ScreenDiffer
@@ -15,7 +14,7 @@ class PerceptionRunner:
         self.hud = HUDParser()
         self.sprites = SpriteDetector()
 
-    def process_frame(self, frame: np.ndarray) -> Dict[str, Any]:
+    def process_frame(self, frame) -> Dict[str, Any]:
         changed = self.differ.has_changed(frame)
         hud = self.hud.parse(frame)
         sprites = self.sprites.detect(frame)
