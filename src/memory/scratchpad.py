@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import time
+import json
+from pathlib import Path
 from typing import List
 
 from src.utils.logger import log
@@ -10,12 +12,22 @@ from .long_term import LongTermMemory
 class WorkingMemory:
     """Manage active objectives and surface relevant facts."""
 
-    def __init__(self, ltm: LongTermMemory) -> None:
+    def __init__(self, ltm: LongTermMemory, store_path: str | None = None) -> None:
         self.ltm = ltm
-        self._objectives: List[dict] = []
+        self.path = Path(store_path or "memory_store/objectives.json")
+        if self.path.exists():
+            self._objectives = json.loads(self.path.read_text())
+        else:
+            self._objectives = []
+
+    def _save(self) -> None:
+        self.path.parent.mkdir(exist_ok=True)
+        with open(self.path, "w") as f:
+            json.dump(self._objectives, f)
 
     def add_objective(self, desc: str) -> None:
         self._objectives.append({"desc": desc, "timestamp": time.time()})
+        self._save()
         log(f"Objective added: {desc}", tag="memory")
 
     def get_objectives(self) -> List[str]:
@@ -24,6 +36,7 @@ class WorkingMemory:
     def complete_objective(self, idx: int) -> None:
         if 0 <= idx < len(self._objectives):
             done = self._objectives.pop(idx)
+            self._save()
             log(f"Objective completed: {done['desc']}", tag="memory")
 
     def top_n_relevant_facts(self, n: int = 5) -> List[str]:

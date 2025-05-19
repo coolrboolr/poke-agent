@@ -6,6 +6,8 @@ from src.perception.runner import PerceptionRunner
 
 def test_runner_integration(tmp_path, monkeypatch, caplog):
     monkeypatch.chdir(tmp_path)
+    from src.utils import event_log as el
+    el._last_time = 0.0
     caplog.set_level('INFO')
     runner = PerceptionRunner()
     frame1 = zeros((144, 160, 3))

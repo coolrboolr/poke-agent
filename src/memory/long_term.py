@@ -59,3 +59,8 @@ class LongTermMemory:
         docs = res.get("documents", [[]])[0]
         log(f"LTM query '{query}' -> {docs}", tag="memory")
         return docs
+
+    def last_facts(self, n: int = 3) -> List[str]:
+        """Return the most recently added facts."""
+        with self._lock:
+            return list(self.collection.docs[-n:])
