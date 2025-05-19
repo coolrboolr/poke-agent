@@ -1,6 +1,6 @@
 import time
 from pathlib import Path
-import numpy as np
+from src.array_utils import zeros, copy_array
 
 from .conftest import load_image
 
@@ -17,8 +17,8 @@ def test_screen_diff_latency_and_change(tmp_path):
     assert differ.has_changed(frame) is False
     elapsed = (time.perf_counter() - start) * 1000
     assert elapsed < 5
-    modified = frame.copy()
-    modified[0, 0, 0] = 255
+    modified = copy_array(frame)
+    modified[0][0][0] = 255
     assert differ.has_changed(modified) is True
 
 
@@ -62,3 +62,4 @@ def test_perception_runner(tmp_path, monkeypatch, caplog):
     log_files = list(Path('logs').glob('game_state_*.json'))
     assert log_files
     assert any('perception' in m for m in caplog.text.splitlines())
+

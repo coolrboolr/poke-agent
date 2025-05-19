@@ -1,7 +1,6 @@
-import numpy as np
-from PIL import Image
 import types
 import time
+from src.array_utils import zeros, shape
 
 import src.emulator.adapter as adapter_module
 from src.emulator.adapter import EmulatorAdapter
@@ -19,7 +18,7 @@ class DummyPopen:
 
 
 def test_read_frame(monkeypatch):
-    dummy_image = Image.new("RGB", (5, 5), color="red")
+    dummy_image = zeros((5, 5, 3))
 
     monkeypatch.setattr(
         adapter_module,
@@ -30,8 +29,7 @@ def test_read_frame(monkeypatch):
 
     emu = EmulatorAdapter(rom_path="test.gba")
     frame = emu.read_frame()
-    assert isinstance(frame, np.ndarray)
-    assert frame.shape == (5, 5, 3)
+    assert shape(frame) == (5, 5, 3)
 
 
 def test_send_input_logs(monkeypatch):
@@ -47,7 +45,7 @@ def test_send_input_logs(monkeypatch):
     monkeypatch.setattr(
         adapter_module.ImageGrab,
         "grab",
-        lambda: Image.new("RGB", (1, 1)),
+        lambda: zeros((1, 1, 3)),
     )
 
     emu = EmulatorAdapter(rom_path="test.gba")
@@ -65,10 +63,11 @@ def test_input_debounce(monkeypatch):
         ),
     )
     monkeypatch.setattr(
-        adapter_module.ImageGrab, "grab", lambda: Image.new("RGB", (1, 1))
+        adapter_module.ImageGrab, "grab", lambda: zeros((1, 1, 3))
     )
 
     emu = EmulatorAdapter(rom_path="test.gba", debounce_interval_ms=80)
     emu.send_input("A")
     emu.send_input("A")
     assert len(calls) == 1
+

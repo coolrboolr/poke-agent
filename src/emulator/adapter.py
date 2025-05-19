@@ -3,8 +3,15 @@ import subprocess
 from typing import Optional
 import time
 
-import numpy as np
-from PIL import ImageGrab
+try:
+    from PIL import ImageGrab  # type: ignore
+except Exception:  # pragma: no cover - fallback when Pillow not installed
+    class ImageGrab:
+        @staticmethod
+        def grab():
+            raise RuntimeError("ImageGrab.grab unavailable")
+
+from src.array_utils import shape
 
 
 from src.utils.logger import log
@@ -37,11 +44,21 @@ class EmulatorAdapter:
             )
             self.process = None
 
-    def read_frame(self) -> np.ndarray:
-        """Capture the current screen frame as a NumPy array."""
+    def read_frame(self):
+        """Capture the current screen frame as a nested list array."""
         img = ImageGrab.grab()
-        frame = np.array(img)
-        log(f"Frame captured: {frame.shape}", tag="emulator")
+        if hasattr(img, "size") and hasattr(img, "getdata"):
+            w, h = img.size
+            data = list(img.getdata())
+            frame = [
+                [list(data[y * w + x]) for x in range(w)]
+                for y in range(h)
+            ]
+        else:
+            frame = img  # type: ignore
+            h = len(frame)
+            w = len(frame[0]) if h else 0
+        log(f"Frame captured: {shape(frame)}", tag="emulator")
         return frame
 
     def send_input(self, button: str) -> None:

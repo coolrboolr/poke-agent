@@ -1,11 +1,4 @@
 python-dotenv
-pytest
-flake8
 pyzmq
-numpy
-pillow
-pytesseract
 mss
 chromadb
-pytest>=7.0.0
-pytest-cov>=4.0.0

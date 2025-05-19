@@ -10,9 +10,9 @@ class DummyAdapter:
         self.read_calls = 0
 
     def read_frame(self):
-        import numpy as np
+        from src.array_utils import zeros
         self.read_calls += 1
-        return np.zeros((160, 144, 3), dtype=np.uint8)
+        return zeros((144, 160, 3))
 
     def send_input(self, *args, **kwargs):
         pass
@@ -48,9 +48,10 @@ def test_loop_metrics(tmp_path, monkeypatch):
 def test_low_fps_warning(tmp_path, monkeypatch):
     class SlowAdapter(DummyAdapter):
         def read_frame(self):
-            import numpy as np, time as _t
+            from src.array_utils import zeros
+            import time as _t
             _t.sleep(0.3)
-            return np.zeros((160, 144, 3), dtype=np.uint8)
+            return zeros((144, 160, 3))
 
     monkeypatch.setattr(main_module, "EmulatorAdapter", SlowAdapter)
     monkeypatch.setattr(main_module, "FrameBus", DummyBus)
@@ -58,3 +59,4 @@ def test_low_fps_warning(tmp_path, monkeypatch):
     main_module.run_loop(duration_s=1)
     data = json.loads((tmp_path / "logs" / "loop_metrics.json").read_text())
     assert data["average_fps"] < 5
+
