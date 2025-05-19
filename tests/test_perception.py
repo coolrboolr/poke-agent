@@ -2,6 +2,8 @@ import time
 from pathlib import Path
 import numpy as np
 
+ASSETS_DIR = Path(__file__).parent / "assets"
+
 from src.perception.screen_diff import ScreenDiffer
 from src.perception.hud_parser import HUDParser
 from src.perception.sprite_detector import SpriteDetector
@@ -9,7 +11,8 @@ from src.perception.runner import PerceptionRunner
 
 
 def load_ppm(path: str) -> np.ndarray:
-    with open(path, 'rb') as f:
+    file_path = ASSETS_DIR.joinpath(Path(path).name)
+    with open(file_path, 'rb') as f:
         assert f.readline().startswith(b'P6')
         dims = f.readline()
         while dims.startswith(b'#'):
