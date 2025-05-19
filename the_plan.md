@@ -28,6 +28,13 @@ This document tracks development from bootstrap through advanced features. Only 
 - **Latency Budget:** <= 4ms per frame
 - **Testing:** Unit tests with sample frames
 
+### M2 Completion Checklist
+- [x] Screen differencing detects scene changes
+- [x] OCR and HP parsing via HUDParser
+- [x] Sprite detector stub with bounding boxes
+- [x] PerceptionRunner aggregates modules
+- [x] GameState logging throttled to 1/sec
+
 ### M3: Memory and Knowledge Module
 - **Goals:**
   - Maintain recent state history and game knowledge
