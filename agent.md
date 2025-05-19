@@ -34,6 +34,12 @@ The Arbiter may override lower-priority actions if a higher-priority lane issues
 - **Learning Loop:** Observes states, actions, and outcomes. Updates policies asynchronously so real-time performance is unaffected.
 - **Influence:** The critic adjusts policy weights used by the lanes but does not directly command actions.
 
+## Context Memory
+- `ContextMemory` composes short-term, long-term and working memory layers.
+- Use `update(game_state)` each frame to record state and facts.
+- Call `query_context(goal)` to fetch relevant past facts for planning.
+- Facts are persisted in `memory_store/` via ChromaDB.
+
 ## Model Configuration and Fallbacks
 
 Each lane may load different model sizes depending on available hardware. If a primary model fails or times out, a smaller fallback model is used. Models are loaded once at startup and monitored for latency.
