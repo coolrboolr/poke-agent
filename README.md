@@ -2,6 +2,8 @@
 
 Poke-Streamer is a real-time agentic framework designed to play Pokémon games autonomously while streaming the gameplay to Twitch. The system is built around modular lanes that emulate different thinking speeds and strategies. An RL-based critic guides long-term improvement. The architecture aims for high observability and low latency, targeting a complete decision cycle under 16ms.
 
+![Progress: M3 Complete](https://img.shields.io/badge/Progress-M3%20Complete-brightgreen)
+
 ## Architecture Overview
 
 ```
@@ -64,8 +66,10 @@ docker compose run --rm app bash
 Inside the container run:
 
 ```bash
-python pytest.py -v
+make test
 ```
+
+Run `make format` to apply `black` before committing changes.
 
 This ensures all dependencies are available when executing the test suite.
 
@@ -102,7 +106,7 @@ The agent operates in a real-time loop targeting less than **16ms** per frame fr
 ## Getting Started
 
 1. Clone the repository.
-2. Set up your `.env` file with ROM paths and Twitch keys.
+2. Copy `.env.example` to `.env` and fill in your ROM path and Twitch key.
 3. Run `docker compose up` to start development.
 4. Read `agent.md` to understand lane behavior.
 
