@@ -1,0 +1,11 @@
+{
+    "name": "poke-streamer-dev",
+    "build": {
+        "dockerfile": "../Dockerfile"
+    },
+    "workspaceFolder": "/app",
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    }
+}
+
