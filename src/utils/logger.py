@@ -1,10 +1,22 @@
 from datetime import datetime
 import inspect
+from typing import Optional
 
 
-def log(message: str, level: str = "INFO") -> None:
-    """Basic logger printing timestamp, level and module name."""
+LEVEL_COLORS = {
+    "INFO": "\033[94m",  # blue
+    "WARN": "\033[93m",  # yellow
+    "ERROR": "\033[91m",  # red
+}
+RESET = "\033[0m"
+
+
+def log(message: str, level: str = "INFO", tag: Optional[str] = None, *, color: bool = True) -> None:
+    """Structured logger with optional color coding."""
     caller = inspect.stack()[1]
-    module = caller.frame.f_globals.get("__name__", "__main__")
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"{timestamp} [{level}] {module}: {message}")
+    module = tag or caller.frame.f_globals.get("__name__", "__main__").split(".")[-1]
+    timestamp = datetime.utcnow().isoformat(timespec="seconds")
+    prefix = f"[{level.upper()}][{module}][{timestamp}]"
+    if color and level.upper() in LEVEL_COLORS:
+        prefix = f"{LEVEL_COLORS[level.upper()]}{prefix}{RESET}"
+    print(f"{prefix} {message}")

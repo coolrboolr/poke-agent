@@ -91,3 +91,11 @@ The agent operates in a real-time loop targeting less than **16ms** per frame fr
 
 Happy streaming!
 
+## Monitoring & Debugging
+
+The `logs` directory stores runtime data including `loop_metrics.json` which
+records average FPS and latency for the main loop. Structured logs appear on
+stdout and can be colored when run in a terminal. For deeper inspection, run
+`tools/frame_diagnose.py` to subscribe to the frame bus and optionally save
+frames for offline review.
+
