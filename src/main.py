@@ -12,19 +12,22 @@ from src.memory.core import ContextMemory
 
 from src.emulator.adapter import EmulatorAdapter
 from src.emulator.frame_bus import FrameBus
-from src.utils.logger import log
+from src.utils.logger import log, log_action, log_latency
 from src.rl import RLCritic
 from src.game_profiles.registry import load_profile
+from src.version import __version__
 
 
-def run_loop(duration_s: int = 30) -> None:
+def run_loop(duration_s: int = 30) -> dict:
     adapter = EmulatorAdapter()
     bus = FrameBus()
+    Path("logs/diagnostics").mkdir(parents=True, exist_ok=True)
     context = ContextMemory()
     critic = RLCritic()
     profile = load_profile()
 
     frames = 0
+    first_action_name = None
     read_lat = []
     bus_lat = []
     decision_lat = []
@@ -45,6 +48,9 @@ def run_loop(duration_s: int = 30) -> None:
         if action:
             adapter.send_input(action.value)
             log(f"Selected action {action}", tag="main")
+            if first_action_name is None:
+                first_action_name = action.name
+            log_action(action.name, frames)
         if first_shape is None:
             from src.array_utils import shape
 
@@ -69,9 +75,13 @@ def run_loop(duration_s: int = 30) -> None:
             pass
         t2 = time.time()
         frames += 1
-        read_lat.append((t1 - t0) * 1000)
-        decision_lat.append((a_end - a_start) * 1000)
-        bus_lat.append((t2 - t1) * 1000)
+        read_ms = (t1 - t0) * 1000
+        decision_ms = (a_end - a_start) * 1000
+        bus_ms = (t2 - t1) * 1000
+        read_lat.append(read_ms)
+        decision_lat.append(decision_ms)
+        bus_lat.append(bus_ms)
+        log_latency(frames, read_ms, bus_ms, decision_ms)
 
     bus.close()
     adapter.close()
@@ -99,6 +109,14 @@ def run_loop(duration_s: int = 30) -> None:
     if avg_fps < 5.0 or avg_read > 100 or avg_bus > 100:
         log("Performance warning: low FPS or high latency", level="WARN", tag="main")
 
+    return {
+        "average_fps": avg_fps,
+        "avg_frame_read_ms": avg_read,
+        "avg_bus_publish_ms": avg_bus,
+        "avg_decision_ms": avg_decision,
+        "first_action": first_action_name,
+    }
+
 
 def main() -> None:
     """Entry point for poke-streamer."""
@@ -112,8 +130,20 @@ def main() -> None:
         )
         log("Dev profile enabled", tag="main")
 
+    log(f"Poke-STREAMER initialized v{__version__}", tag="main")
+
     try:
-        run_loop(duration_s=duration)
+        metrics = run_loop(duration_s=duration)
+        logs_dir = Path("logs")
+        logs_dir.mkdir(exist_ok=True)
+        summary = {
+            "version": __version__,
+            "profile": profile,
+            "average_fps": metrics["average_fps"],
+            "first_action": metrics["first_action"],
+        }
+        with open(logs_dir / "docker_startup_success.json", "w") as f:
+            json.dump(summary, f)
     except FileNotFoundError as exc:
         log(str(exc), level="ERROR", tag="main")
         return
