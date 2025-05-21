@@ -6,8 +6,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from src.arbiter import get_reflex_action
+from src.arbiter import select_action
 from src.utils.actions import Action
+from src.memory.core import ContextMemory
 
 from src.emulator.adapter import EmulatorAdapter
 from src.emulator.frame_bus import FrameBus
@@ -17,11 +18,12 @@ from src.utils.logger import log
 def run_loop(duration_s: int = 30) -> None:
     adapter = EmulatorAdapter()
     bus = FrameBus()
+    context = ContextMemory()
 
     frames = 0
     read_lat = []
     bus_lat = []
-    reflex_lat = []
+    decision_lat = []
     start = time.time()
 
     first_shape = None
@@ -30,13 +32,14 @@ def run_loop(duration_s: int = 30) -> None:
         frame = adapter.read_frame()
         t1 = time.time()
         # Placeholder GameState until perception integration
-        game_state = {"dialogue_text": "", "mode": "idle"}
+        game_state = {"dialogue_text": "", "mode": "idle", "location": "pallet"}
+        context.update(game_state)
         a_start = time.time()
-        action = get_reflex_action(game_state)
+        action = select_action(game_state, context)
         a_end = time.time()
         if action:
             adapter.send_input(action.value)
-            log(f"Reflex action {action}", tag="main")
+            log(f"Selected action {action}", tag="main")
         if first_shape is None:
             from src.array_utils import shape
             first_shape = shape(frame)
@@ -46,7 +49,7 @@ def run_loop(duration_s: int = 30) -> None:
         t2 = time.time()
         frames += 1
         read_lat.append((t1 - t0) * 1000)
-        reflex_lat.append((a_end - a_start) * 1000)
+        decision_lat.append((a_end - a_start) * 1000)
         bus_lat.append((t2 - t1) * 1000)
 
     bus.close()
@@ -55,13 +58,13 @@ def run_loop(duration_s: int = 30) -> None:
     avg_fps = frames / duration_s
     avg_read = sum(read_lat) / len(read_lat)
     avg_bus = sum(bus_lat) / len(bus_lat)
-    avg_reflex = sum(reflex_lat) / len(reflex_lat) if reflex_lat else 0.0
+    avg_decision = sum(decision_lat) / len(decision_lat) if decision_lat else 0.0
 
     metrics = {
         "average_fps": avg_fps,
         "avg_frame_read_ms": avg_read,
         "avg_bus_publish_ms": avg_bus,
-        "avg_reflex_ms": avg_reflex,
+        "avg_decision_ms": avg_decision,
     }
     logs_dir = Path("logs")
     logs_dir.mkdir(exist_ok=True)
@@ -69,7 +72,7 @@ def run_loop(duration_s: int = 30) -> None:
         json.dump(metrics, f)
 
     log(
-        f"Loop complete FPS={avg_fps:.2f} read={avg_read:.1f}ms bus={avg_bus:.1f}ms reflex={avg_reflex:.1f}ms",
+        f"Loop complete FPS={avg_fps:.2f} read={avg_read:.1f}ms bus={avg_bus:.1f}ms decision={avg_decision:.1f}ms",
         tag="main",
     )
     if avg_fps < 5.0 or avg_read > 100 or avg_bus > 100:
