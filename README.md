@@ -54,6 +54,17 @@ docker compose up
 
 The development container exposes a Python environment with required dependencies. ROM paths and Twitch credentials are supplied via environment variables loaded from `.env` or directly through Docker Compose secrets.
 
+## Emulator Setup
+
+`poke-streamer` expects the [mGBA](https://mgba.io/) emulator to be available **inside** the Docker container. The `Dockerfile` installs the headless `mgba-sdl` package alongside other system dependencies. If you modify the base image or add packages, keep the emulator installation in the Dockerfile and rebuild:
+
+```Dockerfile
+RUN apt-get update && \
+    apt-get install -y mgba-sdl
+```
+
+Rebuild the image with `docker compose build`. If `mgba-qt` is unavailable for your base image, switch to `FROM debian:bullseye-slim` and continue using `mgba-sdl`.
+
 ## Running Tests
 
 Build the container image and open a shell inside it:
