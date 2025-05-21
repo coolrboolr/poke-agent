@@ -28,3 +28,26 @@ def test_at_destination(tmp_path):
     agent = StrategicAgent()
     state = {"location": "Pewter City"}
     assert agent.propose_action(state, ctx) is None
+
+
+def test_strategic_goal_selection(tmp_path):
+    ctx = _context(tmp_path)
+    ctx.scratch.add_objective("Reach Pewter City")
+    agent = StrategicAgent()
+    state = {"location": "Route 2"}
+    assert agent.propose_action(state, ctx) == Action.UP
+
+
+def test_goal_completion_fallback(tmp_path):
+    ctx = _context(tmp_path)
+    ctx.scratch.add_objective("Reach Pewter City")
+    agent = StrategicAgent()
+    state = {"location": "Pewter City"}
+    assert agent.propose_action(state, ctx) is None
+
+
+def test_strategic_noop(tmp_path):
+    ctx = _context(tmp_path)
+    agent = StrategicAgent()
+    state = {"location": "Viridian"}
+    assert agent.propose_action(state, ctx) is None

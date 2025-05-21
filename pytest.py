@@ -111,7 +111,7 @@ def main():
     failed = 0
     for path in test_files:
         mod = importlib.import_module(f"tests.{path.stem}")
-        for name, obj in vars(mod).items():
+        for name, obj in list(vars(mod).items()):
             if callable(obj) and name.startswith("test_"):
                 total += 1
                 if run_test(obj):
