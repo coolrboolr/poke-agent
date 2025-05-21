@@ -13,7 +13,8 @@ from src.memory.core import ContextMemory
 from src.emulator.adapter import EmulatorAdapter
 from src.emulator.frame_bus import FrameBus
 from src.utils.logger import log
-from src.rl import RLCritic, compute_reward
+from src.rl import RLCritic
+from src.game_profiles.registry import load_profile
 
 
 def run_loop(duration_s: int = 30) -> None:
@@ -21,6 +22,7 @@ def run_loop(duration_s: int = 30) -> None:
     bus = FrameBus()
     context = ContextMemory()
     critic = RLCritic()
+    profile = load_profile()
 
     frames = 0
     read_lat = []
@@ -29,19 +31,13 @@ def run_loop(duration_s: int = 30) -> None:
     start = time.time()
 
     first_shape = None
-    prev_state = {
-        "dialogue_text": "",
-        "mode": "idle",
-        "location": "pallet",
-        "badges": 0,
-    }
+    prev_state = {}
     last_action: Action | None = None
     while time.time() - start < duration_s:
         t0 = time.time()
         frame = adapter.read_frame()
         t1 = time.time()
-        # Placeholder GameState until perception integration
-        game_state = {"dialogue_text": "", "mode": "idle", "location": "pallet"}
+        game_state = profile.parse_game_state(frame)
         context.update(game_state)
         a_start = time.time()
         action = select_action(game_state, context)
@@ -57,14 +53,14 @@ def run_loop(duration_s: int = 30) -> None:
                 log(f"Unexpected frame shape {first_shape}", level="WARN", tag="main")
         bus.publish(frame)
 
-        reward = compute_reward(prev_state, game_state)
+        reward = profile.get_reward(prev_state, game_state)
         critic.observe(prev_state, last_action, reward)
         critic.estimate_value(game_state)
         prev_state = game_state
         last_action = action
 
         overlay = {
-            "mode": game_state.get("mode"),
+            "mode": game_state.get("mode", "idle"),
             "action": action.value if action else None,
         }
         try:

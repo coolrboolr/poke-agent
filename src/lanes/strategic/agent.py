@@ -6,34 +6,38 @@ from typing import Optional
 from src.memory import GameState, ContextMemory
 from src.utils.actions import Action
 from src.utils.logger import log
+from src.game_profiles.registry import load_profile
+from src.game_profiles.base import GameProfile
 
 
 class StrategicAgent:
     """Long-term planner using high-level objectives."""
 
-    def __init__(self) -> None:
+    def __init__(self, profile: GameProfile | None = None) -> None:
         self._frames = 0
         self._total_latency = 0.0
+        self.profile = profile or load_profile()
 
     def _current_goal(self, memory: ContextMemory) -> Optional[str]:
         """Return the first active objective description if any."""
         goals = memory.scratch.get_objectives()
         return goals[0] if goals else None
 
-    def propose_action(self, game_state: GameState, memory: ContextMemory) -> Optional[Action]:
+    def propose_action(
+        self, game_state: GameState, memory: ContextMemory
+    ) -> Optional[Action]:
         """Suggest an action toward completing the current strategic objective."""
         start = time.perf_counter()
         goal = self._current_goal(memory)
-        location = game_state.get("location")
+        location = game_state.get("location", "")
 
         action: Optional[Action] = None
 
-        # Very simple heuristic rules for demo purposes
-        if goal and "pewter" in goal.lower():
-            if location and location.lower().startswith("pewter"):
-                action = None  # Goal reached
+        heuristics = [h.lower() for h in self.profile.get_goal_heuristics(memory)]
+        if goal and any(h in goal.lower() for h in heuristics):
+            if any(h in location.lower() for h in heuristics):
+                action = None
             else:
-                # Assume Pewter City is to the north of current position
                 action = Action.UP
 
         elapsed = (time.perf_counter() - start) * 1000.0
