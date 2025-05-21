@@ -20,6 +20,8 @@ ENV PROFILE=release
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+EXPOSE 5555
+EXPOSE 5000
 
 COPY . .
 

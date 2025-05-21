@@ -119,6 +119,18 @@ def test_overlay_output(tmp_path, monkeypatch):
     assert data["action"] == "A"
 
 
+def test_brain_state_output(tmp_path, monkeypatch):
+    monkeypatch.setattr(main_module, "EmulatorAdapter", DummyAdapter)
+    monkeypatch.setattr(main_module, "FrameBus", DummyBus)
+    monkeypatch.setattr(main_module, "select_action", lambda s, c: Action.A)
+    monkeypatch.chdir(tmp_path)
+    main_module.run_loop(duration_s=1)
+    path = Path("logs/diagnostics/brain_state.json")
+    assert path.exists()
+    data = json.loads(path.read_text())
+    assert data["selected"] == "A"
+
+
 def test_startup_summary(tmp_path, monkeypatch):
     env_path = tmp_path / ".env"
     env_path.write_text(

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from src.arbiter import select_action
+from src.arbiter import select_action, get_last_brain_state
 from src.utils.actions import Action
 from src.memory.core import ContextMemory
 
@@ -61,7 +61,7 @@ def run_loop(duration_s: int = 30) -> dict:
 
         reward = profile.get_reward(prev_state, game_state)
         critic.observe(prev_state, last_action, reward)
-        critic.estimate_value(game_state)
+        critic_value = critic.estimate_value(game_state)
         prev_state = game_state
         last_action = action
 
@@ -71,6 +71,24 @@ def run_loop(duration_s: int = 30) -> dict:
         }
         try:
             Path("overlay.json").write_text(json.dumps(overlay))
+        except Exception:
+            pass
+        try:
+            brain = get_last_brain_state()
+            brain_state = {
+                "frame": frames,
+                "reflex": brain.get("reflex"),
+                "tactical": brain.get("tactical"),
+                "strategic": brain.get("strategic"),
+                "selected": brain.get("selected"),
+                "goal": context.scratch.get_objectives()[0]
+                if context.scratch.get_objectives()
+                else None,
+                "critic_value": critic_value,
+            }
+            diag = Path("logs/diagnostics")
+            diag.mkdir(parents=True, exist_ok=True)
+            (diag / "brain_state.json").write_text(json.dumps(brain_state))
         except Exception:
             pass
         t2 = time.time()
