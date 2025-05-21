@@ -35,6 +35,7 @@ class DummyBus:
 def test_loop_metrics(tmp_path, monkeypatch):
     monkeypatch.setattr(main_module, "EmulatorAdapter", DummyAdapter)
     monkeypatch.setattr(main_module, "FrameBus", DummyBus)
+    monkeypatch.setattr(main_module, "get_reflex_action", lambda state: None)
     logs = tmp_path / "logs"
     monkeypatch.chdir(tmp_path)
     main_module.run_loop(duration_s=1)
@@ -55,6 +56,7 @@ def test_low_fps_warning(tmp_path, monkeypatch):
 
     monkeypatch.setattr(main_module, "EmulatorAdapter", SlowAdapter)
     monkeypatch.setattr(main_module, "FrameBus", DummyBus)
+    monkeypatch.setattr(main_module, "get_reflex_action", lambda state: None)
     monkeypatch.chdir(tmp_path)
     main_module.run_loop(duration_s=1)
     data = json.loads((tmp_path / "logs" / "loop_metrics.json").read_text())
