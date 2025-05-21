@@ -80,7 +80,17 @@ def test_stream_config_load(tmp_path, monkeypatch, capsys):
                 os.environ[k] = v
 
     monkeypatch.setattr(main_module, "load_dotenv", _load)
-    monkeypatch.setattr(main_module, "run_loop", lambda duration_s=1: None)
+    monkeypatch.setattr(
+        main_module,
+        "run_loop",
+        lambda duration_s=1: {
+            "average_fps": 0,
+            "avg_frame_read_ms": 0,
+            "avg_bus_publish_ms": 0,
+            "avg_decision_ms": 0,
+            "first_action": None,
+        },
+    )
     monkeypatch.setattr(main_module, "select_action", lambda s, c: None)
     main_module.main()
     out = capsys.readouterr().out
@@ -107,4 +117,29 @@ def test_overlay_output(tmp_path, monkeypatch):
     data = json.loads(Path("overlay.json").read_text())
     assert data["mode"] == "idle"
     assert data["action"] == "A"
+
+
+def test_startup_summary(tmp_path, monkeypatch):
+    env_path = tmp_path / ".env"
+    env_path.write_text(
+        "PROFILE=dev\nLOOP_DURATION=1\nROM_PATH=test.gba\nGAME_PROFILE=pokemon\n"
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(main_module, "EmulatorAdapter", DummyAdapter)
+    monkeypatch.setattr(main_module, "FrameBus", DummyBus)
+    monkeypatch.setattr(main_module.subprocess, "Popen", lambda *a, **k: None)
+    monkeypatch.setattr(main_module, "select_action", lambda s, c: Action.A)
+
+    def _load():
+        for line in open(".env"):
+            if "=" in line:
+                k, v = line.strip().split("=", 1)
+                os.environ[k] = v
+
+    monkeypatch.setattr(main_module, "load_dotenv", _load)
+    main_module.main()
+    summary_file = tmp_path / "logs" / "docker_startup_success.json"
+    assert summary_file.exists()
+    data = json.loads(summary_file.read_text())
+    assert data["first_action"] == "A"
 
