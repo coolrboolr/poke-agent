@@ -15,5 +15,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: pip install -r requirements.txt
+      - run: pip install coverage
       - run: flake8 src tests || true
-      - run: python pytest.py -v
+      - run: coverage run --source=src/lanes/reflex,src/utils pytest.py -v
+      - run: coverage report --fail-under=90
