@@ -13,12 +13,14 @@ from src.memory.core import ContextMemory
 from src.emulator.adapter import EmulatorAdapter
 from src.emulator.frame_bus import FrameBus
 from src.utils.logger import log
+from src.rl import RLCritic, compute_reward
 
 
 def run_loop(duration_s: int = 30) -> None:
     adapter = EmulatorAdapter()
     bus = FrameBus()
     context = ContextMemory()
+    critic = RLCritic()
 
     frames = 0
     read_lat = []
@@ -27,6 +29,13 @@ def run_loop(duration_s: int = 30) -> None:
     start = time.time()
 
     first_shape = None
+    prev_state = {
+        "dialogue_text": "",
+        "mode": "idle",
+        "location": "pallet",
+        "badges": 0,
+    }
+    last_action: Action | None = None
     while time.time() - start < duration_s:
         t0 = time.time()
         frame = adapter.read_frame()
@@ -42,10 +51,26 @@ def run_loop(duration_s: int = 30) -> None:
             log(f"Selected action {action}", tag="main")
         if first_shape is None:
             from src.array_utils import shape
+
             first_shape = shape(frame)
             if first_shape != (160, 144, 3):
                 log(f"Unexpected frame shape {first_shape}", level="WARN", tag="main")
         bus.publish(frame)
+
+        reward = compute_reward(prev_state, game_state)
+        critic.observe(prev_state, last_action, reward)
+        critic.estimate_value(game_state)
+        prev_state = game_state
+        last_action = action
+
+        overlay = {
+            "mode": game_state.get("mode"),
+            "action": action.value if action else None,
+        }
+        try:
+            Path("overlay.json").write_text(json.dumps(overlay))
+        except Exception:
+            pass
         t2 = time.time()
         frames += 1
         read_lat.append((t1 - t0) * 1000)
@@ -86,7 +111,9 @@ def main() -> None:
     duration = int(os.getenv("LOOP_DURATION", "30"))
 
     if profile == "dev":
-        subprocess.Popen(["python", "tools/frame_diagnose.py"], stdout=subprocess.DEVNULL)
+        subprocess.Popen(
+            ["python", "tools/frame_diagnose.py"], stdout=subprocess.DEVNULL
+        )
         log("Dev profile enabled", tag="main")
 
     try:
