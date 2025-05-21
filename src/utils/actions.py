@@ -10,4 +10,9 @@ class Action(Enum):
     LEFT = "LEFT"
     RIGHT = "RIGHT"
     START = "START"
+    MOVE_1 = "MOVE_1"
+    MOVE_2 = "MOVE_2"
+    MOVE_3 = "MOVE_3"
+    MOVE_4 = "MOVE_4"
+    USE_POTION = "USE_POTION"
 
