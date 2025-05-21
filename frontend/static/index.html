@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Poke-Streamer</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    table, th, td { border: 1px solid #333; border-collapse: collapse; padding: 4px; }
+    img { image-rendering: pixelated; }
+  </style>
+  <script>
+    async function refresh() {
+      try {
+        const res = await fetch('/diagnostics/brain_state.json');
+        if (res.ok) {
+          const data = await res.json();
+          for (const key of ['reflex','tactical','strategic','selected','goal','critic_value']) {
+            const el = document.getElementById(key);
+            if (el) el.textContent = data[key] ?? '';
+          }
+        }
+      } catch(e) {}
+      const img = document.getElementById('frame');
+      if (img) img.src = '/frame.jpg?t=' + Date.now();
+    }
+    setInterval(refresh, 1000);
+    window.onload = refresh;
+  </script>
+</head>
+<body>
+  <h1>Poke-Streamer</h1>
+  <img id="frame" width="320" alt="frame" />
+  <table>
+    <tr><th>Lane</th><th>Action</th></tr>
+    <tr><td>Reflex</td><td id="reflex"></td></tr>
+    <tr><td>Tactical</td><td id="tactical"></td></tr>
+    <tr><td>Strategic</td><td id="strategic"></td></tr>
+    <tr><td>Selected</td><td id="selected"></td></tr>
+    <tr><td>Goal</td><td id="goal"></td></tr>
+    <tr><td>Critic</td><td id="critic_value"></td></tr>
+  </table>
+</body>
+</html>
