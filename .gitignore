@@ -33,3 +33,5 @@ Thumbs.db
 
 # Other ignored files
 emulator/Emerald.gba
+
+overlay.json
