@@ -52,10 +52,10 @@ docker compose build
 docker compose up
 ```
 
-The agent runs headlessly by default with GUI features disabled. Set the
-`ENABLE_GUI` environment variable to `true` and provide a valid `DISPLAY`
-(for example via `Xvfb`) if you want to capture real frames and send input
-through `xdotool`.
+The container now starts with GUI capture **enabled** so that real emulator
+frames can be read and inputs can be dispatched via `xdotool`. Set
+`ENABLE_GUI=false` if you need a fully headless run. Ensure a valid `DISPLAY`
+is available (e.g. provided by `Xvfb` on Linux) when GUI mode is enabled.
 
 The development container exposes a Python environment with required dependencies. ROM paths and Twitch credentials are supplied via environment variables loaded from `.env` or directly through Docker Compose secrets.
 

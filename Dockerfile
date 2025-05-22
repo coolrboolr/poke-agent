@@ -20,7 +20,7 @@ WORKDIR /app
 
 ENV PROFILE=release
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH="/app"
+ENV PYTHONPATH="/app/src"
 ENV ENABLE_GUI="true"
 
 COPY requirements.txt ./
