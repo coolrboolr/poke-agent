@@ -64,8 +64,14 @@ def run_loop(duration_s: int = 30) -> dict:
             from src.array_utils import shape
 
             first_shape = shape(frame)
-            if first_shape != (160, 144, 3):
-                log(f"Unexpected frame shape {first_shape}", level="WARN", tag="main")
+            if first_shape != (144, 160, 3):
+                log(
+                    f"Unexpected frame shape {first_shape}",
+                    level="WARN",
+                    tag="main",
+                )
+            else:
+                log(f"Valid frame shape: {first_shape}", level="DEBUG", tag="main")
         bus.publish(frame)
         try:
             logs_dir = Path("logs")
