@@ -1,5 +1,35 @@
-.venv/
+# Runtime logs and overlays
+logs/
+logs/**/*.json
+logs/**/*.log
+logs/**/*.csv
+logs/frame.jpg
+snapshots/
+
+# Python cache and compiled files
 __pycache__/
+*.py[cod]
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Local environment secrets
 .env
+.env.*
+
+# Frontend build artifacts and node modules
+frontend/node_modules/
+frontend/dist/
+
+# Local dev environments
+.venv/
+venv/
+
+# Editor and workspace settings
+.vscode/
+*.code-workspace
+.DS_Store
+Thumbs.db
+
+# Other ignored files
 emulator/Emerald.gba
-.env
