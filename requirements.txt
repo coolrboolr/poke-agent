@@ -3,3 +3,4 @@ pyzmq
 mss
 chromadb
 coverage
+Pillow

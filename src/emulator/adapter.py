@@ -3,6 +3,8 @@ import subprocess
 from typing import Optional
 import time
 
+from src.array_utils import zeros, shape
+
 try:
     from PIL import ImageGrab  # type: ignore
 except Exception:  # pragma: no cover - fallback when Pillow not installed
@@ -11,10 +13,9 @@ except Exception:  # pragma: no cover - fallback when Pillow not installed
         def grab():
             raise RuntimeError("ImageGrab.grab unavailable")
 
-from src.array_utils import shape
-
-
 from src.utils.logger import log
+
+DUMMY_FRAME = zeros((144, 160, 3))
 
 
 class EmulatorAdapter:
@@ -46,18 +47,21 @@ class EmulatorAdapter:
 
     def read_frame(self):
         """Capture the current screen frame as a nested list array."""
-        img = ImageGrab.grab()
-        if hasattr(img, "size") and hasattr(img, "getdata"):
-            w, h = img.size
-            data = list(img.getdata())
-            frame = [
-                [list(data[y * w + x]) for x in range(w)]
-                for y in range(h)
-            ]
+        try:
+            img = ImageGrab.grab()
+        except Exception as e:  # pragma: no cover - fallback when grab fails
+            log(f"Failed to read frame: {e}", level="WARN", tag="emulator")
+            frame = zeros((len(DUMMY_FRAME), len(DUMMY_FRAME[0]), 3))
         else:
-            frame = img  # type: ignore
-            h = len(frame)
-            w = len(frame[0]) if h else 0
+            if hasattr(img, "size") and hasattr(img, "getdata"):
+                w, h = img.size
+                data = list(img.getdata())
+                frame = [
+                    [list(data[y * w + x]) for x in range(w)]
+                    for y in range(h)
+                ]
+            else:
+                frame = img  # type: ignore
         log(f"Frame captured: {shape(frame)}", tag="emulator")
         return frame
 
