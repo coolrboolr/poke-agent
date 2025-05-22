@@ -63,6 +63,8 @@ class EmulatorAdapter:
             else:
                 frame = img  # type: ignore
         log(f"Frame captured: {shape(frame)}", tag="emulator")
+        if os.getenv("PROFILE") == "dev":
+            assert shape(frame) == (144, 160, 3), f"Bad frame shape: {shape(frame)}"
         return frame
 
     def send_input(self, button: str) -> None:
