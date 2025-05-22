@@ -53,11 +53,13 @@ class EmulatorAdapter:
         display = os.getenv("DISPLAY")
         if not display:
             cmd = ["xvfb-run", "-a"] + cmd
-            log(f"Launching mGBA with xvfb-run: {' '.join(cmd)}", tag="emulator")
-        else:
-            log(f"Launching mGBA: {' '.join(cmd)}", tag="emulator")
+        log(f"Launching emulator command: {' '.join(cmd)}", tag="emulator")
         try:
-            self.process = subprocess.Popen(cmd)
+            self.process = subprocess.Popen(
+                cmd,
+                stdout=getattr(subprocess, "PIPE", None),
+                stderr=getattr(subprocess, "PIPE", None),
+            )
             log("mGBA launched", tag="emulator")
         except FileNotFoundError:
             log(
@@ -66,6 +68,7 @@ class EmulatorAdapter:
                 tag="emulator",
             )
             self.process = None
+            self.use_gui = False
 
     def read_frame(self):
         """Capture the current screen frame as a nested list array."""

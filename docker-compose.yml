@@ -4,12 +4,13 @@ services:
     command: python -m src.main
     volumes:
       - .:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix
     env_file:
       - .env
     environment:
       - DISPLAY=${DISPLAY:-}
-      - ENABLE_GUI=${ENABLE_GUI:-false}
-      - PYTHONPATH=/app
+      - ENABLE_GUI=${ENABLE_GUI:-true}
+      - PYTHONPATH=/app/src
     ports:
       - "5001:5000"
       - "5555:5555"
