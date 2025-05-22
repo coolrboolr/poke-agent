@@ -23,6 +23,23 @@ This document tracks development from bootstrap through advanced features. Only 
 - **Latency Budget:** Frame capture + input dispatch under 5ms
 - **Testing:** Integration tests using a mocked emulator interface
 
+### M1.5: Emulator GUI & Streaming
+- **Modules:** `emulator/`, `docker-compose.yml`, `frontend/`
+- **Goals:**
+  - Enable emulator GUI in the container (via X11 forwarding or Xvfb) to capture real emulator frames instead of dummy data
+  - Correct handling of the `ENABLE_GUI` flag and default it to `true` for development builds
+  - Mount host X11 socket (`/tmp/.X11-unix`) or start `Xvfb` inside the container when no `DISPLAY` is available
+  - Validate that `mgba-sdl` launches under `xvfb-run` and confirm process startup via logs
+  - Ensure that `logs/frame.jpg` is written with non-black pixel data and refreshed for the front end
+- **Deliverables:**
+  - Docker Compose updates: change default `ENABLE_GUI` to `true`, propagate `DISPLAY`, add volume mount for `/tmp/.X11-unix`, and document host X setup (e.g., `xhost +local:docker`)
+  - Code tweaks in `adapter.py` to emit clear logs for emulator launch, fallback behavior, and frame capture
+  - Front-end integration: verify `/frame.jpg` polling and display of captured frames
+  - Integration test that, after container startup, `logs/frame.jpg` exists and contains at least one non-zero pixel
+- **Testing:**
+  - Automated integration test to read `logs/frame.jpg` and assert non-dummy content
+  - Manual validation of frame streaming in the web UI
+
 ### M2: Perception Module
 - **Modules:** `perception/`
 - **Goals:**
