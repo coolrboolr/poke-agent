@@ -39,7 +39,7 @@ class EmulatorAdapter:
             log("mGBA launched", tag="emulator")
         except FileNotFoundError:
             log(
-                "mGBA executable not found; continuing without emulator",
+                "mGBA not bundled: running in dummy mode",
                 level="WARN",
                 tag="emulator",
             )
@@ -73,7 +73,17 @@ class EmulatorAdapter:
         if now - self._last_input_time < self.debounce_interval_ms / 1000.0:
             log(f"Input debounced: {button}", level="WARN", tag="emulator")
             return
-        subprocess.run(["xdotool", "key", button], check=False)
+
+        if not os.getenv("DISPLAY"):
+            log("[input] Skipping xdo input: no display available", level="WARN", tag="emulator")
+            return
+
+        try:
+            subprocess.run(["xdotool", "key", button], check=False)
+        except Exception as e:  # pragma: no cover - runtime safeguard
+            log(f"[input] Failed to send {button}: {e}", level="WARN", tag="emulator")
+            return
+
         self._last_input_time = now
         log(f"Input sent: {button}", tag="emulator")
 
