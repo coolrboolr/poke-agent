@@ -17,6 +17,15 @@ from src.rl import RLCritic
 from src.game_profiles.registry import load_profile
 from src.version import __version__
 
+try:
+    import cv2  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    cv2 = None
+try:
+    from PIL import Image  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    Image = None
+
 
 def run_loop(duration_s: int = 30) -> dict:
     adapter = EmulatorAdapter()
@@ -58,6 +67,19 @@ def run_loop(duration_s: int = 30) -> dict:
             if first_shape != (160, 144, 3):
                 log(f"Unexpected frame shape {first_shape}", level="WARN", tag="main")
         bus.publish(frame)
+        try:
+            logs_dir = Path("logs")
+            logs_dir.mkdir(exist_ok=True)
+            img_path = logs_dir / "frame.jpg"
+            if cv2 is not None:
+                import numpy as np  # type: ignore
+                cv2.imwrite(str(img_path), np.array(frame, dtype=np.uint8))
+            elif Image is not None:
+                img = Image.new("RGB", (len(frame[0]), len(frame)))
+                img.putdata([tuple(px) for row in frame for px in row])
+                img.save(img_path)
+        except Exception as e:
+            log(f"Failed to write frame.jpg: {e}", level="WARN", tag="main")
 
         reward = profile.get_reward(prev_state, game_state)
         critic.observe(prev_state, last_action, reward)
