@@ -21,8 +21,11 @@ class TacticalAgent:
         self._frames = 0
         self._total_latency = 0.0
 
-    def propose_action(self, game_state: GameState, context: ContextMemory) -> Optional[Action]:
+    def propose_action(
+        self, game_state: GameState, context: ContextMemory
+    ) -> Optional[Action]:
         """Return tactical action proposal based on game state."""
+        log(f"Tactical input: {game_state}", level="DEBUG", tag="tactical")
         start = time.perf_counter()
         mode = game_state.get("mode")
         action: Optional[Action] = None

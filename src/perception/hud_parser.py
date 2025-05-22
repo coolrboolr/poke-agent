@@ -14,7 +14,12 @@ class HUDParser:
     def _extract_text(self, frame) -> str:
         x1, y1, x2, y2 = self.TEXTBOX_REGION
         crop = [row[x1:x2] for row in frame[y1:y2]]
-        text = pytesseract.image_to_string(crop)
+        try:
+            text = pytesseract.image_to_string(crop)
+            log(f"OCR raw output: {text}", level="DEBUG", tag="perception")
+        except Exception as e:
+            log(f"OCR failed: {e}", level="WARN", tag="perception")
+            text = ""
         cleaned = text.replace("\n", " ").strip()
         cleaned = cleaned.replace("0HP", "OHP")  # example typo fix
         return cleaned

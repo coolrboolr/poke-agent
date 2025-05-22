@@ -27,6 +27,7 @@ class StrategicAgent:
         self, game_state: GameState, memory: ContextMemory
     ) -> Optional[Action]:
         """Suggest an action toward completing the current strategic objective."""
+        log(f"Strategic input: {game_state}", level="DEBUG", tag="strategic")
         start = time.perf_counter()
         goal = self._current_goal(memory)
         location = game_state.get("location", "")

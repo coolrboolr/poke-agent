@@ -21,7 +21,7 @@ WORKDIR /app
 ENV PROFILE=release
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH="/app"
-ENV ENABLE_GUI="false"
+ENV ENABLE_GUI="true"
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
@@ -30,4 +30,4 @@ EXPOSE 5000
 
 COPY . .
 
-CMD ["bash", "-c", "export DISPLAY=\"\" ENABLE_GUI=\"false\" && python -m src.main"]
+CMD ["xvfb-run", "--server-args=-screen 0 640x480x24", "python", "-m", "src.main"]
