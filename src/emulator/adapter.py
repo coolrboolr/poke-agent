@@ -8,10 +8,12 @@ from src.array_utils import zeros, shape
 try:
     from PIL import ImageGrab  # type: ignore
 except Exception:  # pragma: no cover - fallback when Pillow not installed
+
     class ImageGrab:
         @staticmethod
         def grab():
             raise RuntimeError("ImageGrab.grab unavailable")
+
 
 from src.utils.logger import log
 
@@ -19,13 +21,16 @@ from src.utils.logger import log
 def _env_use_gui() -> bool:
     return os.environ.get("ENABLE_GUI", "true").lower() == "true"
 
+
 DUMMY_FRAME = zeros((144, 160, 3))
 
 
 class EmulatorAdapter:
     """Launch mGBA and interact via screenshots and keypresses."""
 
-    def __init__(self, rom_path: Optional[str] = None, debounce_interval_ms: int = 80) -> None:
+    def __init__(
+        self, rom_path: Optional[str] = None, debounce_interval_ms: int = 80
+    ) -> None:
         self.rom_path = rom_path or os.getenv("ROM_PATH")
         if not self.rom_path:
             raise FileNotFoundError("ROM_PATH is not set")
@@ -35,15 +40,22 @@ class EmulatorAdapter:
 
         self.process: Optional[subprocess.Popen] = None
         self.use_gui = _env_use_gui()
+        self._dummy_frames = 0
         self._launch_emulator()
 
     def _launch_emulator(self) -> None:
-        if not self.use_gui or not os.getenv("DISPLAY"):
+        if not self.use_gui:
             log("GUI disabled; running in dummy emulator mode", tag="emulator")
             self.process = None
             return
 
         cmd = ["mgba-sdl", self.rom_path]
+        display = os.getenv("DISPLAY")
+        if not display:
+            cmd = ["xvfb-run", "-a"] + cmd
+            log(f"Launching mGBA with xvfb-run: {' '.join(cmd)}", tag="emulator")
+        else:
+            log(f"Launching mGBA: {' '.join(cmd)}", tag="emulator")
         try:
             self.process = subprocess.Popen(cmd)
             log("mGBA launched", tag="emulator")
@@ -60,23 +72,34 @@ class EmulatorAdapter:
         if not self.use_gui or not os.getenv("DISPLAY"):
             log("GUI disabled; returning dummy frame", tag="emulator")
             frame = zeros((len(DUMMY_FRAME), len(DUMMY_FRAME[0]), 3))
+            self._dummy_frames += 1
         else:
             try:
                 img = ImageGrab.grab()
             except Exception as e:  # pragma: no cover - fallback when grab fails
                 log(f"Failed to read frame: {e}", level="WARN", tag="emulator")
                 frame = zeros((len(DUMMY_FRAME), len(DUMMY_FRAME[0]), 3))
+                self._dummy_frames += 1
             else:
                 if hasattr(img, "size") and hasattr(img, "getdata"):
                     w, h = img.size
                     data = list(img.getdata())
                     frame = [
-                        [list(data[y * w + x]) for x in range(w)]
-                        for y in range(h)
+                        [list(data[y * w + x]) for x in range(w)] for y in range(h)
                     ]
                 else:
                     frame = img  # type: ignore
+                self._dummy_frames = 0
         log(f"Frame captured: {shape(frame)}", tag="emulator")
+        if self._dummy_frames > 3 and self.use_gui:
+            log(
+                "Restarting emulator due to persistent dummy frames",
+                level="WARN",
+                tag="emulator",
+            )
+            self.close()
+            self._launch_emulator()
+            self._dummy_frames = 0
         if os.getenv("PROFILE") == "dev":
             assert shape(frame) == (144, 160, 3), f"Bad frame shape: {shape(frame)}"
         return frame
@@ -89,7 +112,11 @@ class EmulatorAdapter:
             return
 
         if not self.use_gui or not os.getenv("DISPLAY"):
-            log("[input] Skipping xdo input: no display available", level="WARN", tag="emulator")
+            log(
+                "[input] Skipping xdo input: no display available",
+                level="WARN",
+                tag="emulator",
+            )
             return
 
         try:

@@ -3,6 +3,9 @@ import os
 import subprocess
 import time
 from pathlib import Path
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from dotenv import load_dotenv
 
@@ -79,6 +82,7 @@ def run_loop(duration_s: int = 30) -> dict:
             img_path = logs_dir / "frame.jpg"
             if cv2 is not None:
                 import numpy as np  # type: ignore
+
                 cv2.imwrite(str(img_path), np.array(frame, dtype=np.uint8))
             elif Image is not None:
                 img = Image.new("RGB", (len(frame[0]), len(frame)))
@@ -109,9 +113,11 @@ def run_loop(duration_s: int = 30) -> dict:
                 "tactical": brain.get("tactical"),
                 "strategic": brain.get("strategic"),
                 "selected": brain.get("selected"),
-                "goal": context.scratch.get_objectives()[0]
-                if context.scratch.get_objectives()
-                else None,
+                "goal": (
+                    context.scratch.get_objectives()[0]
+                    if context.scratch.get_objectives()
+                    else None
+                ),
                 "critic_value": critic_value,
             }
             diag = Path("logs/diagnostics")

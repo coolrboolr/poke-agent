@@ -24,6 +24,7 @@ class ReflexAgent:
         """Return immediate action recommendation."""
         start = time.perf_counter()
 
+        log(f"Reflex input: {game_state}", level="DEBUG", tag="reflex")
         dialogue = game_state.get("dialogue_text") or ""
         mode = game_state.get("mode")
         if mode is None:
@@ -54,5 +55,3 @@ class ReflexAgent:
             log(f"Average reflex latency: {avg:.3f}ms", tag="reflex")
 
         return action
-
-
