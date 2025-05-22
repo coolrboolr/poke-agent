@@ -14,9 +14,11 @@ class ReflexAgent:
 
     DIRECTIONS = [Action.LEFT, Action.RIGHT, Action.UP, Action.DOWN]
 
-    def __init__(self) -> None:
+    def __init__(self, default_mode: str = "explore") -> None:
         self._frames = 0
         self._total_latency = 0.0
+        self.default_mode = default_mode
+        self._warned_missing_mode = False
 
     def propose_action(self, game_state: GameState) -> Optional[Action]:
         """Return immediate action recommendation."""
@@ -25,8 +27,10 @@ class ReflexAgent:
         dialogue = game_state.get("dialogue_text") or ""
         mode = game_state.get("mode")
         if mode is None:
-            log("Missing mode; defaulted", level="WARN", tag="reflex")
-            mode = "idle"
+            if not self._warned_missing_mode:
+                log("Missing mode; defaulted", level="WARN", tag="reflex")
+                self._warned_missing_mode = True
+            mode = self.default_mode
 
         action: Optional[Action] = None
         if dialogue:
@@ -50,4 +54,5 @@ class ReflexAgent:
             log(f"Average reflex latency: {avg:.3f}ms", tag="reflex")
 
         return action
+
 
