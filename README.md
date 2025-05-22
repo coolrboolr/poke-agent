@@ -52,10 +52,10 @@ docker compose build
 docker compose up
 ```
 
-The container now launches a virtual X server (Xvfb) on display `:1` so that
-screen capture and input tools work in headless environments. Ensure `DISPLAY`
-is set to `:1` in your `.env` file or environment variables when running the
-stack outside of Docker Compose.
+The agent runs headlessly by default with GUI features disabled. Set the
+`ENABLE_GUI` environment variable to `true` and provide a valid `DISPLAY`
+(for example via `Xvfb`) if you want to capture real frames and send input
+through `xdotool`.
 
 The development container exposes a Python environment with required dependencies. ROM paths and Twitch credentials are supplied via environment variables loaded from `.env` or directly through Docker Compose secrets.
 

@@ -19,7 +19,9 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 ENV PROFILE=release
-ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH="/app"
+ENV ENABLE_GUI="false"
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
@@ -28,4 +30,4 @@ EXPOSE 5000
 
 COPY . .
 
-CMD ["bash", "-c", "Xvfb :1 -screen 0 1280x1024x24 & export DISPLAY=:1 && python -m src.main"]
+CMD ["bash", "-c", "export DISPLAY=\"\" ENABLE_GUI=\"false\" && python -m src.main"]

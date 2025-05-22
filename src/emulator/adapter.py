@@ -15,6 +15,10 @@ except Exception:  # pragma: no cover - fallback when Pillow not installed
 
 from src.utils.logger import log
 
+
+def _env_use_gui() -> bool:
+    return os.environ.get("ENABLE_GUI", "true").lower() == "true"
+
 DUMMY_FRAME = zeros((144, 160, 3))
 
 
@@ -30,9 +34,15 @@ class EmulatorAdapter:
         self._last_input_time = 0.0
 
         self.process: Optional[subprocess.Popen] = None
+        self.use_gui = _env_use_gui()
         self._launch_emulator()
 
     def _launch_emulator(self) -> None:
+        if not self.use_gui or not os.getenv("DISPLAY"):
+            log("GUI disabled; running in dummy emulator mode", tag="emulator")
+            self.process = None
+            return
+
         cmd = ["mgba-sdl", self.rom_path]
         try:
             self.process = subprocess.Popen(cmd)
@@ -47,21 +57,25 @@ class EmulatorAdapter:
 
     def read_frame(self):
         """Capture the current screen frame as a nested list array."""
-        try:
-            img = ImageGrab.grab()
-        except Exception as e:  # pragma: no cover - fallback when grab fails
-            log(f"Failed to read frame: {e}", level="WARN", tag="emulator")
+        if not self.use_gui or not os.getenv("DISPLAY"):
+            log("GUI disabled; returning dummy frame", tag="emulator")
             frame = zeros((len(DUMMY_FRAME), len(DUMMY_FRAME[0]), 3))
         else:
-            if hasattr(img, "size") and hasattr(img, "getdata"):
-                w, h = img.size
-                data = list(img.getdata())
-                frame = [
-                    [list(data[y * w + x]) for x in range(w)]
-                    for y in range(h)
-                ]
+            try:
+                img = ImageGrab.grab()
+            except Exception as e:  # pragma: no cover - fallback when grab fails
+                log(f"Failed to read frame: {e}", level="WARN", tag="emulator")
+                frame = zeros((len(DUMMY_FRAME), len(DUMMY_FRAME[0]), 3))
             else:
-                frame = img  # type: ignore
+                if hasattr(img, "size") and hasattr(img, "getdata"):
+                    w, h = img.size
+                    data = list(img.getdata())
+                    frame = [
+                        [list(data[y * w + x]) for x in range(w)]
+                        for y in range(h)
+                    ]
+                else:
+                    frame = img  # type: ignore
         log(f"Frame captured: {shape(frame)}", tag="emulator")
         if os.getenv("PROFILE") == "dev":
             assert shape(frame) == (144, 160, 3), f"Bad frame shape: {shape(frame)}"
@@ -74,7 +88,7 @@ class EmulatorAdapter:
             log(f"Input debounced: {button}", level="WARN", tag="emulator")
             return
 
-        if not os.getenv("DISPLAY"):
+        if not self.use_gui or not os.getenv("DISPLAY"):
             log("[input] Skipping xdo input: no display available", level="WARN", tag="emulator")
             return
 
