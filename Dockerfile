@@ -11,7 +11,9 @@ RUN apt-get update && apt-get install -y \
     libzmq3-dev \
     python3-numpy \
     python3-pil \
-    xdotool && \
+    xdotool \
+    xvfb \
+    x11-utils && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -25,4 +27,4 @@ EXPOSE 5000
 
 COPY . .
 
-CMD ["python", "-m", "src.main"]
+CMD ["bash", "-c", "Xvfb :1 -screen 0 1280x1024x24 & export DISPLAY=:1 && python -m src.main"]
