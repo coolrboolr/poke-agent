@@ -6,6 +6,8 @@ services:
       - .:/app
     env_file:
       - .env
+    environment:
+      - DISPLAY=${DISPLAY:-:1}
     ports:
       - "5001:5000"
       - "5555:5555"
